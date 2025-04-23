@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "module": "NodeNext",
+        "target": "es6",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "lib": [
+            "esnext",
+            "dom"
+        ],
+        "strict": true,
+        "allowImportingTsExtensions": true,
+        "verbatimModuleSyntax": true,
+        "noEmit": true,
+        "paths": {
+            "@prisma/client": [
+                "./node_modules/@prisma/client"
+            ],
+            "@prisma/client/*": [
+                "./generated/prisma"
+            ],
+        }
+
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}

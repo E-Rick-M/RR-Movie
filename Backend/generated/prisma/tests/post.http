@@ -1,0 +1,21 @@
+
+POST http://localhost:5000/movies
+Content-Type: application/json
+
+{
+    "title": "My third Movie",
+    "imageUrl": "https://example.com/image.jpg",
+    "genre": "Action",
+    "overview": "An action-packed movie with thrilling scenes.",
+    "releaseDate": "2023-10-01",
+    "rating": 8,
+    "duration": 120,
+    "trailerUrl": "https://example.com/trailer.mp4",
+    "quality": "HD",
+    "category": "Action",
+    "cast":"John Doe, Jane Smith",
+    "country":"USA",
+    "productionCompany":"XYZ Productions",
+    "language":"English"
+
+}
