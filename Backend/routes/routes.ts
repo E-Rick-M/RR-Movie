@@ -6,7 +6,7 @@ import type { data } from 'react-router';
 const prisma = new PrismaClient()
 const router = express.Router();
 import { authenticate } from './auth.ts';
-
+import { fileUpload } from '../fileUpload.ts';
 type Movie = {
     title: string;
     imageUrl: string;
@@ -47,14 +47,19 @@ router.get('/:id', async (req, res) => {
 });
 
 
-router.post('/',authenticate, async (req, res) => {
-    const { title,imageUrl,genre,overview,releaseDate,rating,duration,trailerUrl, description, quality,category,language,cast,country,productionCompany } = req.body;
+router.post('/',authenticate,fileUpload.single('imageUrl'), async (req, res) => {
+    const { title,imageUrl,genre,overview,releaseDate,rating,duration,trailerUrl, quality,category,language,cast,country,productionCompany } = req.body;
 
+    if (!req.body) {
+        res.status(400).json({ error: "Form data is missing" });
+        return;
+      }
+      
 
     const erros: Partial<Movie> = {};
 
     if (!title) erros.title = "Title is required";
-    if (!imageUrl) erros.imageUrl = "Image URL is required";
+    // if (!imageUrl) erros.imageUrl = "Image URL is required";
     if (!genre) erros.genre = "Genre is required";
     if (!overview) erros.overview = "Overview is required";
     if (!releaseDate) erros.releaseDate = "Release Date is required";
@@ -72,17 +77,26 @@ router.post('/',authenticate, async (req, res) => {
     if (Object.keys(erros).length > 0) {
         res.status(400).json({ erros });
     }
+    if (!req.file) {
+        res.status(400).json({ message: 'Image file is required' });
+        return;
+    }
+    const imageUrlPath = `/images/${req.file.filename}`;
+
+
     const formartedReleaseDate = new Date(releaseDate);
+    const floatrating = parseFloat(rating);
+    const intDuration = parseInt(duration);
 
     const movie=await prisma.movie.create({
         data:{
             title,
-            imageUrl,
+            imageUrl:imageUrlPath,
             genre,
             overview,
             releaseDate:formartedReleaseDate,
-            rating,
-            duration,
+            rating:floatrating,
+            duration:intDuration,
             trailerUrl,
             quality,
             category,
@@ -92,7 +106,7 @@ router.post('/',authenticate, async (req, res) => {
             productionCompany
         }
     })
-    res.status(201).json(movie);
+    res.status(201).json({message:"Movie created successfully",movie});
     }
 );
 
