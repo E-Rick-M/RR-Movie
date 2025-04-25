@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import type { data } from 'react-router';
 const prisma = new PrismaClient()
 const router = express.Router();
+import { authenticate } from './auth.ts';
 
 type Movie = {
     title: string;
@@ -31,7 +32,22 @@ router.get('/', async(req, res) => {
 }
 );
 
-router.post('/', async (req, res) => {
+
+router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+    const movie = await prisma.movie.findUnique({
+        where: {
+            id: Number(id),
+        },
+    });
+    if (!movie) {
+        res.status(404).json({ message: 'Movie not found' });
+    }
+    res.status(200).json(movie);
+});
+
+
+router.post('/',authenticate, async (req, res) => {
     const { title,imageUrl,genre,overview,releaseDate,rating,duration,trailerUrl, description, quality,category,language,cast,country,productionCompany } = req.body;
 
 
@@ -81,21 +97,10 @@ router.post('/', async (req, res) => {
 );
 
 
-router.get('/:id', async (req, res) => {
-    const { id } = req.params;
-    const movie = await prisma.movie.findUnique({
-        where: {
-            id: Number(id),
-        },
-    });
-    if (!movie) {
-        res.status(404).json({ message: 'Movie not found' });
-    }
-    res.status(200).json(movie);
-});
 
 
-router.put('/:id', async (req, res) => {
+
+router.put('/:id',authenticate, async (req, res) => {
     const { id } = req.params;
     const { title,imageUrl,genre,overview,releaseDate,rating,duration,trailerUrl, description, quality,category,language,cast,country,productionCompany } = req.body;
     const erros: Partial<Movie> = {};
@@ -147,7 +152,7 @@ router.put('/:id', async (req, res) => {
 );
 
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id',authenticate, async (req, res) => {
     const { id } = req.params;
     const movie = await prisma.movie.delete({
         where: {

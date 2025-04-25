@@ -1,4 +1,13 @@
-import express from 'express';
+import express, { type NextFunction ,type Request,type Response  } from 'express';
+
+// Extend the Request interface to include the 'user' property
+declare global {
+    namespace Express {
+        interface Request {
+            user?: any;
+        }
+    }
+}
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
@@ -33,7 +42,7 @@ router.post('/signup', async(req, res) => {
         res.status(500).json({ message: "JWT_SECRET is not defined in environment variables" });
         return
     }
-    const hashedPassword = bcrypt.hashSync(password, 10);
+    const hashedPassword =await bcrypt.hash(password, 10);
 
     const user=await prisma.user.create({
         data:{
@@ -87,10 +96,11 @@ router.post('/login', async (req, res) => {
             email,
         },
     });
-    if (!user) {
+    if (!user || !user.password) {
         res.status(400).json({ message: "User not found" });
+        return
     }
-    const isPasswordValid = bcrypt.compareSync(password, user.password);
+    const isPasswordValid = bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
         res.status(400).json({ message: "Invalid password" });
         return
@@ -102,6 +112,34 @@ router.post('/login', async (req, res) => {
     res.status(200).json({ message: "Login successful", token });
 }
 );
+
+
+export function authenticate(req :Request, res :Response,next :NextFunction){
+   const authHeader = req.headers.authorization
+
+    if (!authHeader) {
+        res.status(401).json({ message: 'Authorization header is missing' });
+        return;
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    if(!process.env.JWT_SECRET){
+        res.status(500).json({ message: "JWT_SECRET is not defined in environment variables" });
+        return
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    }
+    catch (error) {
+        res.status(401).json({ message: 'Invalid token' });
+    }
+
+
+}
 
 
 export default router;
